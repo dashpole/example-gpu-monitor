@@ -16,7 +16,12 @@ package main
 
 import (
 	"flag"
+	"fmt"
+	"net/http"
+
 	"github.com/golang/glog"
+	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 
 	"github.com/dashpole/example-gpu-monitor/pkg/gpustats"
 	"github.com/dashpole/example-gpu-monitor/pkg/kubeletdevices"
@@ -24,7 +29,7 @@ import (
 )
 
 var (
-	socket             = flag.String("socket", "", "location of the kubelet's podresources service")
+	socket             = flag.String("socket", "unix:///var/lib/kubelet/kubelet.sock", "location of the kubelet's podresources service")
 	port               = flag.Int("port", 8080, "port on which to listen")
 	prometheusEndpoint = flag.String("prometheus_endpoint", "/metrics", "Endpoint to expose Prometheus metrics on")
 )
@@ -35,6 +40,10 @@ func main() {
 
 	glog.V(1).Infof("Starting example-gpu-monitor")
 
-	metrics.Register(gpustats.NewGPUStatsProvider(), kubeletdevices.NewDeviceProvider())
+	mux := http.NewServeMux()
+	r := prometheus.NewRegistry()
+	r.MustRegister(metrics.NewGPUCollector(gpustats.NewGPUStatsProvider(), kubeletdevices.NewDeviceProvider(*socket)))
+	mux.Handle(*prometheusEndpoint, promhttp.HandlerFor(r, promhttp.HandlerOpts{ErrorHandling: promhttp.ContinueOnError}))
 
+	glog.Fatal(http.ListenAndServe(fmt.Sprintf(":%d", *port), mux))
 }

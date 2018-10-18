@@ -15,8 +15,6 @@
 package metrics
 
 import (
-	"sync"
-
 	"github.com/golang/glog"
 	"github.com/prometheus/client_golang/prometheus"
 
@@ -49,15 +47,7 @@ var (
 	)
 )
 
-var registerMetrics sync.Once
-
-func Register(statsProvider gpustats.GPUStatsProvider, podProvider kubeletdevices.DeviceProvider) {
-	registerMetrics.Do(func() {
-		prometheus.MustRegister(newGPUCollector(statsProvider, podProvider))
-	})
-}
-
-func newGPUCollector(statsProvider gpustats.GPUStatsProvider, podProvider kubeletdevices.DeviceProvider) *gpuCollector {
+func NewGPUCollector(statsProvider gpustats.GPUStatsProvider, podProvider kubeletdevices.DeviceProvider) *gpuCollector {
 	return &gpuCollector{
 		podsProvider:  podProvider,
 		statsProvider: statsProvider,

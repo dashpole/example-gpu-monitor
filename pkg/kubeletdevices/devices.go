@@ -20,15 +20,13 @@ import (
 	"time"
 
 	"github.com/golang/glog"
+	"google.golang.org/grpc"
 
-	"k8s.io/kubernetes/pkg/kubelet/apis/podresources"
 	podresourcesapi "k8s.io/kubernetes/pkg/kubelet/apis/podresources/v1alpha1"
+	"k8s.io/kubernetes/pkg/kubelet/util"
 )
 
 const (
-	// defaultPodResourcesSocket is the path to the socket serving the podresources API.
-	// defaultPodResourcesSocket  = "unix:///var/lib/kubelet/pod-resources/kubelet.sock"
-	defaultPodResourcesSocket  = "unix:///var/lib/kubelet/kubelet.sock"
 	defaultPodResourcesTimeout = 10 * time.Second
 	defaultPodResourcesMaxSize = 1024 * 1024 * 16 // 16 Mb
 )
@@ -41,13 +39,20 @@ type deviceProvider struct {
 	client podresourcesapi.PodResourcesListerClient
 }
 
-func NewDeviceProvider() DeviceProvider {
-	client, _, err := podresources.GetClient(defaultPodResourcesSocket, defaultPodResourcesTimeout, defaultPodResourcesMaxSize)
+func NewDeviceProvider(socket string) DeviceProvider {
+	addr, dailer, err := util.GetAddressAndDialer(socket)
 	if err != nil {
-		glog.Fatalf("Failed to get grpc client: %v", err)
+		glog.Fatalf("Error getting address and dialer for socket %s: %v", socket, err)
+	}
+	ctx, cancel := context.WithTimeout(context.Background(), defaultPodResourcesTimeout)
+	defer cancel()
+
+	conn, err := grpc.DialContext(ctx, addr, grpc.WithInsecure(), grpc.WithDialer(dailer), grpc.WithDefaultCallOptions(grpc.MaxCallRecvMsgSize(defaultPodResourcesMaxSize)))
+	if err != nil {
+		glog.Fatalf("Error dialing socket %s: %v", socket, err)
 	}
 	return &deviceProvider{
-		client: client,
+		client: podresourcesapi.NewPodResourcesListerClient(conn),
 	}
 }
 

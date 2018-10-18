@@ -13,6 +13,22 @@ spec:
       labels:
         k8s-app: nvidia-gpu-monitoring-daemonset
     spec:
+      containers:
+      - image: "gcr.io/dashpole-kubernetes-test/gpu-monitor:v2"
+        name: gpu-monitor
+        args: ["--socket=/podresources/kubelet.sock", --v=10]
+        volumeMounts:
+        - name: kubelet-podresources
+          mountPath: /podresources
+        - name: dev
+          mountPath: /dev
+        - name: libnvidia
+          mountPath: /home/kubernetes/bin/nvidia/lib64/
+        securityContext:
+          privileged: true
+        env:
+        - name: LD_LIBRARY_PATH
+          value: "/home/kubernetes/bin/nvidia/lib64/"
       volumes:
         - name: kubelet-podresources
           hostPath:
@@ -20,12 +36,6 @@ spec:
         - name: dev
           hostPath:
             path: /dev
-      containers:
-      - image: "gcr.io/dashpole-kubernetes-test/gpu-monitor:v2"
-        name: gpu-monitor
-        args: ["--socket=/podresources/kubelet.sock"]
-        volumeMounts:
-        - name: kubelet-podresources
-          mountPath: /podresources
-        - name: dev
-          mountPath: /dev
+        - name: libnvidia
+          hostPath:
+            path: /home/kubernetes/bin/nvidia/lib64/

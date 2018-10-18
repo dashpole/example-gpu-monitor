@@ -1,0 +1,31 @@
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: nvidia-gpu-monitoring-daemonset
+  labels:
+    k8s-app: nvidia-gpu-monitoring-daemonset
+spec:
+  selector:
+    matchLabels:
+      k8s-app: nvidia-gpu-monitoring-daemonset
+  template:
+    metadata:
+      labels:
+        k8s-app: nvidia-gpu-monitoring-daemonset
+    spec:
+      volumes:
+        - name: kubelet-podresources
+          hostPath:
+            path: /var/lib/kubelet/
+        - name: dev
+          hostPath:
+            path: /dev
+      containers:
+      - image: "gcr.io/dashpole-kubernetes-test/gpu-monitor:v2"
+        name: gpu-monitor
+        args: ["--socket=/podresources/kubelet.sock"]
+        volumeMounts:
+        - name: kubelet-podresources
+          mountPath: /podresources
+        - name: dev
+          mountPath: /dev

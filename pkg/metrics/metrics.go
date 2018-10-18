@@ -71,6 +71,7 @@ func (g *gpuCollector) Collect(ch chan<- prometheus.Metric) {
 		glog.Errorf("error getting devices from the kubelet: %v", err)
 		return
 	}
+	glog.Infof("got podResources!: %+v", podResources)
 	for _, pod := range podResources.GetPodResources() {
 		for _, container := range pod.GetContainers() {
 			for _, device := range container.GetDevices() {

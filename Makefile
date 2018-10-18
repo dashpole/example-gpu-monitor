@@ -34,7 +34,7 @@ build:
 	@./build/build.sh
 
 docker:
-	@docker build -t cadvisor:$(shell git rev-parse --short HEAD) -f deploy/Dockerfile .
+	@docker build -t gpu-monitor:$(shell git rev-parse --short HEAD) -f deploy/Dockerfile .
 
 presubmit: vet
 	@echo ">> checking go formatting"

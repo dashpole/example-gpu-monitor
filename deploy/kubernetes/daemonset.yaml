@@ -16,7 +16,7 @@ spec:
       containers:
       - image: "gcr.io/dashpole-kubernetes-test/gpu-monitor:v2"
         name: gpu-monitor
-        args: ["--socket=/podresources/kubelet.sock", --v=10]
+        args: ["--socket=/podresources/kubelet.sock"]
         volumeMounts:
         - name: kubelet-podresources
           mountPath: /podresources

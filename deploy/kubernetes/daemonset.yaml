@@ -2,6 +2,7 @@ apiVersion: apps/v1
 kind: DaemonSet
 metadata:
   name: nvidia-gpu-monitoring-daemonset
+  namespace: monitoring
   labels:
     k8s-app: nvidia-gpu-monitoring-daemonset
 spec:
@@ -12,11 +13,14 @@ spec:
     metadata:
       labels:
         k8s-app: nvidia-gpu-monitoring-daemonset
+      annotations:
+        prometheus.io/extension: 'true'
+        prometheus.io/port: '8080'
     spec:
       containers:
       - image: "gcr.io/dashpole-kubernetes-test/gpu-monitor:v2"
         name: gpu-monitor
-        args: ["--socket=/podresources/kubelet.sock"]
+        args: ["--socket=/podresources/kubelet.sock", "--v=10"]
         volumeMounts:
         - name: kubelet-podresources
           mountPath: /podresources
@@ -26,13 +30,17 @@ spec:
           mountPath: /home/kubernetes/bin/nvidia/lib64/
         securityContext:
           privileged: true
+        ports:
+          - name: http
+            containerPort: 8080
+            protocol: TCP
         env:
         - name: LD_LIBRARY_PATH
           value: "/home/kubernetes/bin/nvidia/lib64/"
       volumes:
         - name: kubelet-podresources
           hostPath:
-            path: /var/lib/kubelet/pod-resources/
+            path: /var/lib/kubelet/
         - name: dev
           hostPath:
             path: /dev

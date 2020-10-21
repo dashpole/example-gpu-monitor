@@ -24,10 +24,13 @@ spec:
         volumeMounts:
         - name: kubelet-podresources
           mountPath: /podresources
+          readOnly: true
         - name: dev
           mountPath: /dev
+          readOnly: true
         - name: libnvidia
           mountPath: /home/kubernetes/bin/nvidia/lib64/
+          readOnly: true
         securityContext:
           privileged: true
         ports:

@@ -1,5 +1,4 @@
-FROM alpine:3.7
-MAINTAINER dashpole@google.com
+FROM alpine:3.8
 
 ENV GLIBC_VERSION "2.28-r0"
 

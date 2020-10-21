@@ -18,9 +18,9 @@ spec:
         prometheus.io/port: '8080'
     spec:
       containers:
-      - image: "gcr.io/dashpole-kubernetes-test/gpu-monitor:v2"
+      - image: "gcr.io/dashpole-gke-dev/gpu-monitor:v0"
         name: gpu-monitor
-        args: ["--socket=/podresources/kubelet.sock", "--v=10"]
+        args: ["--socket=unix:///podresources/pod-resources/kubelet.sock", "--v=10"]
         volumeMounts:
         - name: kubelet-podresources
           mountPath: /podresources
@@ -37,6 +37,12 @@ spec:
         env:
         - name: LD_LIBRARY_PATH
           value: "/home/kubernetes/bin/nvidia/lib64/"
+      nodeSelector:
+        cloud.google.com/gke-accelerator: nvidia-tesla-k80
+      tolerations:
+      - key: "nvidia.com/gpu"
+        value: "present"
+        effect: "NoSchedule"
       volumes:
         - name: kubelet-podresources
           hostPath:
